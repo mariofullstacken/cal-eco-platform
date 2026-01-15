@@ -1,4 +1,4 @@
-import { normalizeAuthResponse } from "./auth.service";
+import { normalizeAuthResponse } from "./auth.utils";
 
 describe("normalizeAuthResponse", () => {
   it("maps authToken to access_token", () => {
