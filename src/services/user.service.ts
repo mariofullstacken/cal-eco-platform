@@ -25,7 +25,7 @@ export type UpdateUserProfilePayload = {
   intro?: string;
 };
 
-const USERS_BASE = "/api/v1/users";
+const USERS_BASE = "/users";
 
 const unwrapResponse = <T,>(response: ApiResponse<T>): T => {
   if (!response?.success) {

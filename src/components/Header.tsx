@@ -7,6 +7,7 @@ import Button from "../UI/Button";
 import { useWeb3React } from "@web3-react/core";
 import ConnectWallet from "./auth/ConnectWallet";
 import { AuthContext, ActionTypes } from "../contexts/AuthContext";
+import useAuth from "../hooks/useAuth";
 // const style = {
 //   position: "absolute" as "absolute",
 //   top: "50%",
@@ -18,6 +19,7 @@ import { AuthContext, ActionTypes } from "../contexts/AuthContext";
 
 export function Header() {
   const { updateAuthAction, isAuthenticated } = useContext(AuthContext);
+  const { logout } = useAuth();
   const { account } = useWeb3React();
 
   const handleLogin = () => {
@@ -91,6 +93,14 @@ export function Header() {
               label="Register/Login"
               customStyle="!text-white border-white border border-opacity-50"
               title="Coming Soon!!"
+            />
+          )}
+          {isAuthenticated && (
+            <Button
+              color="default"
+              onClick={logout}
+              label="Logout"
+              customStyle="!text-white border-white border border-opacity-50"
             />
           )}
           <Button

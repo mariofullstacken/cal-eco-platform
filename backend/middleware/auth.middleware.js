@@ -2,7 +2,8 @@ const jwt = require('jsonwebtoken');
 const config = require('../config');
 
 function ensureWebToken(req, res, next) {
-  const token = req.headers['authorization'];
+  const authHeader = req.headers['authorization'];
+  const token = authHeader ? authHeader.replace(/^Bearer\s+/i, '') : null;
   if (!token) {
     return res.sendStatus(403);
   }
@@ -24,7 +25,8 @@ function ensureWebToken(req, res, next) {
 }
 
 function ensureWebTokenForAdmin(req, res, next) {
-  const token = req.headers['authorization'];
+  const authHeader = req.headers['authorization'];
+  const token = authHeader ? authHeader.replace(/^Bearer\s+/i, '') : null;
   if (!token) {
     return res.sendStatus(403);
   }
@@ -46,5 +48,4 @@ function ensureWebTokenForAdmin(req, res, next) {
 }
 
 module.exports = { ensureWebToken, ensureWebTokenForAdmin };
-
 

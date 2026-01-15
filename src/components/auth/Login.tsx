@@ -4,7 +4,10 @@ import { useForm } from "react-hook-form";
 
 import { ReactComponent as GoogleButton } from "../../assets/images/GoogleButton.svg";
 import { postApi } from "../../services/axios.service";
-import { handleSignInWithGoogleClick } from "../../services/auth.service";
+import {
+  handleSignInWithGoogleClick,
+  normalizeAuthResponse,
+} from "../../services/auth.service";
 import useAuth from "../../hooks/useAuth";
 import { ActionTypes, AuthContext } from "../../contexts/AuthContext";
 
@@ -19,6 +22,41 @@ const Login = () => {
   const { login } = useAuth();
 
   const [apiError, setApiError] = useState("");
+  const loginMessage = "Login Quant Fund";
+
+  const requestWalletSignature = async () => {
+    const ethereum = (window as any).ethereum;
+    if (!ethereum?.request) {
+      const error: any = new Error("Wallet not detected. Please install MetaMask.");
+      error.code = "WALLET_NOT_DETECTED";
+      throw error;
+    }
+
+    const accounts = await ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    if (!accounts || accounts.length === 0) {
+      throw new Error("No wallet account selected.");
+    }
+
+    const address = accounts[0];
+    const signature = await ethereum.request({
+      method: "personal_sign",
+      params: [loginMessage, address],
+    });
+
+    return { address, signature };
+  };
+
+  const attemptDevLogin = async () => {
+    const result = await postApi("/auth/dev-login", {});
+    if (!result?.success) {
+      throw new Error(result?.message || result?.msg || "Dev login failed");
+    }
+    const authPayload = normalizeAuthResponse(result.data);
+    login(authPayload);
+    toggleModal();
+  };
 
   const handleRedirectToRegister = (e: any) => {
     e.preventDefault();
@@ -33,12 +71,32 @@ const Login = () => {
   const onSubmit = async (data: any) => {
     try {
       setApiError("");
-      const result = await postApi("/auth/login", data);
-      login(result.data);
+      let walletPayload;
+      try {
+        walletPayload = await requestWalletSignature();
+      } catch (error: any) {
+        if (error?.code === "WALLET_NOT_DETECTED") {
+          await attemptDevLogin();
+          return;
+        }
+        throw error;
+      }
+
+      const result = await postApi("/auth/login-signature", walletPayload);
+      if (!result?.success) {
+        throw new Error(result?.message || result?.msg || "Login failed");
+      }
+      const authPayload = normalizeAuthResponse(result.data);
+      login(authPayload);
       toggleModal();
     } catch (e: any) {
       console.log("Error: ", e?.response?.data || e);
-      setApiError(e?.response?.data?.message || "Invalid Credentials");
+      setApiError(
+        e?.response?.data?.message ||
+          e?.response?.data?.msg ||
+          e?.message ||
+          "Invalid Credentials"
+      );
     }
   };
 

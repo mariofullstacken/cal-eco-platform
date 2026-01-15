@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useContext } from "react";
 import { ACCESS_TOKEN_LOCAL_STORAGE } from "../constants/common";
 import { getCurrentUser } from "../services/user.service";
+import { postApi } from "../services/axios.service";
 import { AuthContext } from "../contexts/AuthContext";
 
 const useAuth = () => {
@@ -20,8 +21,12 @@ const useAuth = () => {
   };
 
   // Simulate a logout action
-  const logout = () => {
-    // Perform logout logic, clear user data
+  const logout = async () => {
+    try {
+      await postApi("/auth/logout", {});
+    } catch (_error) {
+      // Ignore logout errors; client state reset is the priority.
+    }
     setUser(null);
     localStorage.removeItem(ACCESS_TOKEN_LOCAL_STORAGE);
     setIsAuthenticated(false);
