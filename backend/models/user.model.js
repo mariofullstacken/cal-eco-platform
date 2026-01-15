@@ -13,6 +13,19 @@ class UserModel {
     return mockData.getUserByAddress(data.address);
   }
 
+  async getUserByUsername(data) {
+    return mockData.getUserByUsername(data.username);
+  }
+
+  async updateUserProfile(data) {
+    return mockData.updateUserProfileByAddress(data.address, {
+      first_name: data.first_name,
+      last_name: data.last_name,
+      username: data.username,
+      intro: data.intro,
+    });
+  }
+
   async checkBalanceFromStaking(data) {
     return mockData.getUserById(data.user_id);
   }

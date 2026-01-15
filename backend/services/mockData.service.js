@@ -40,6 +40,10 @@ class MockDataService {
       referral_id: null,
       token_balance: 10000,
       MBUSD_balance: 50000,
+      first_name: 'Admin',
+      last_name: 'User',
+      username: 'admin',
+      intro: 'Platform administrator account',
       is_admin: 1,
       datetime: new Date(),
     });
@@ -53,6 +57,10 @@ class MockDataService {
       referral_id: null,
       token_balance: 5000,
       MBUSD_balance: 25000,
+      first_name: 'Demo',
+      last_name: 'User',
+      username: 'demo_user',
+      intro: 'Sample profile for mock data',
       is_admin: 0,
       datetime: new Date(),
     });
@@ -126,6 +134,28 @@ class MockDataService {
     return [];
   }
 
+  getUserByUsername(username) {
+    for (const user of this.users.values()) {
+      if ((user.username || '').toLowerCase() === username.toLowerCase()) {
+        return [user];
+      }
+    }
+    return [];
+  }
+
+  updateUserProfileByAddress(address, updates) {
+    for (const user of this.users.values()) {
+      if (user.address.toLowerCase() === address.toLowerCase()) {
+        user.first_name = updates.first_name ?? user.first_name;
+        user.last_name = updates.last_name ?? user.last_name;
+        user.username = updates.username ?? user.username;
+        user.intro = updates.intro ?? user.intro;
+        return { affectedRows: 1, user };
+      }
+    }
+    return { affectedRows: 0 };
+  }
+
   getUserByReferralCode(referralCode) {
     for (const user of this.users.values()) {
       if (user.referral_code === referralCode) {
@@ -149,6 +179,10 @@ class MockDataService {
       referral_id: data.referral_id || null,
       token_balance: 0,
       MBUSD_balance: 0,
+      first_name: data.first_name || '',
+      last_name: data.last_name || '',
+      username: data.username || '',
+      intro: data.intro || '',
       is_admin: 0,
       datetime: new Date(),
     };
