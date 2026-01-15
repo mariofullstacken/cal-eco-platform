@@ -13,3 +13,5 @@ I’ll avoid large rewrites or broad refactors and keep changes focused, aligned
 Note: Enabled React Router v7 future flags in `BrowserRouter` to silence console warnings (`v7_startTransition` and `v7_relativeSplatPath`).
 
 ## Refactor a single backend domain slice
+
+I focused on the users slice because the frontend currently calls `/users/me`, `/users/exists/username/:username`, and `/users/google`, while the backend only exposes `/api/v1/users/me`, making it a contained, high-signal place to align routes, contracts, and error handling without broad changes.

@@ -57,11 +57,16 @@ export const AuthActions: AuthActionType[] = [
 ];
 
 export type IUser = {
-  _id: string;
-  firstName: string;
-  lastName: string;
+  _id?: string;
+  id?: number;
+  address?: string;
+  tokenBalance?: number;
+  mbusdBalance?: number;
+  referralCode?: string;
+  firstName?: string;
+  lastName?: string;
   username?: string;
-  email: string;
+  email?: string;
   isVerified?: boolean;
   intro?: string;
 };
