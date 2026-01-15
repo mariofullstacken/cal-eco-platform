@@ -10,4 +10,6 @@ I plan to:
 
 I’ll avoid large rewrites or broad refactors and keep changes focused, aligned with existing conventions, and easy to review.
 
+Note: Enabled React Router v7 future flags in `BrowserRouter` to silence console warnings (`v7_startTransition` and `v7_relativeSplatPath`).
+
 ## Refactor a single backend domain slice
