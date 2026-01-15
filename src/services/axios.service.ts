@@ -3,7 +3,7 @@ import { ACCESS_TOKEN_LOCAL_STORAGE } from "../constants/common";
 import { Navigate } from "react-router";
 
 const http = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_URL,
+  baseURL: `${process.env.REACT_APP_BACKEND_URL}/api/v1`,
 });
 
 http.interceptors.request.use((config) => {

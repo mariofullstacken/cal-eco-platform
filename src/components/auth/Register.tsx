@@ -4,7 +4,10 @@ import { useForm } from "react-hook-form";
 
 import { ReactComponent as GoogleButton } from "../../assets/images/GoogleButton.svg";
 import { postApi } from "../../services/axios.service";
-import { handleSignInWithGoogleClick } from "../../services/auth.service";
+import {
+  handleSignInWithGoogleClick,
+  normalizeAuthResponse,
+} from "../../services/auth.service";
 import useAuth from "../../hooks/useAuth";
 import { ActionTypes, AuthContext } from "../../contexts/AuthContext";
 
@@ -19,6 +22,29 @@ const Register = () => {
   const { login } = useAuth();
 
   const [apiError, setApiError] = useState("");
+  const loginMessage = "Login Quant Fund";
+
+  const requestWalletSignature = async () => {
+    const ethereum = (window as any).ethereum;
+    if (!ethereum?.request) {
+      throw new Error("Wallet not detected. Please install MetaMask.");
+    }
+
+    const accounts = await ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    if (!accounts || accounts.length === 0) {
+      throw new Error("No wallet account selected.");
+    }
+
+    const address = accounts[0];
+    const signature = await ethereum.request({
+      method: "personal_sign",
+      params: [loginMessage, address],
+    });
+
+    return { address, signature };
+  };
 
   const handleRedirectToLogin = (e: any) => {
     e.preventDefault();
@@ -29,12 +55,26 @@ const Register = () => {
   const onSubmit = async (data: any) => {
     try {
       setApiError("");
-      const result = await postApi("/auth", data);
-      login(result.data);
+      const legacyUrl = `${process.env.REACT_APP_BACKEND_URL}/api/userregister`;
+      const walletPayload = await requestWalletSignature();
+      const result = await postApi(legacyUrl, {
+        ...walletPayload,
+        referral_address: data.referralAddress || undefined,
+      });
+      if (!result?.success) {
+        throw new Error(result?.msg || result?.message || "Registration failed");
+      }
+      const authPayload = normalizeAuthResponse(result.data);
+      login(authPayload);
       toggleModal();
     } catch (e: any) {
       console.log("Error: ", e?.response?.data || e);
-      setApiError(e?.response?.data?.message || "Invalid Credentials");
+      setApiError(
+        e?.response?.data?.message ||
+          e?.response?.data?.msg ||
+          e?.message ||
+          "Invalid Credentials"
+      );
     }
   };
 
