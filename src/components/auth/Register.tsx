@@ -27,7 +27,9 @@ const Register = () => {
   const requestWalletSignature = async () => {
     const ethereum = (window as any).ethereum;
     if (!ethereum?.request) {
-      throw new Error("Wallet not detected. Please install MetaMask.");
+      const error: any = new Error("Wallet not detected. Please install MetaMask.");
+      error.code = "WALLET_NOT_DETECTED";
+      throw error;
     }
 
     const accounts = await ethereum.request({
@@ -46,6 +48,16 @@ const Register = () => {
     return { address, signature };
   };
 
+  const attemptDevLogin = async () => {
+    const result = await postApi("/auth/dev-login", {});
+    if (!result?.success) {
+      throw new Error(result?.message || result?.msg || "Dev login failed");
+    }
+    const authPayload = normalizeAuthResponse(result.data);
+    login(authPayload);
+    toggleModal();
+  };
+
   const handleRedirectToLogin = (e: any) => {
     e.preventDefault();
     toggleModal();
@@ -56,7 +68,16 @@ const Register = () => {
     try {
       setApiError("");
       const legacyUrl = `${process.env.REACT_APP_BACKEND_URL}/api/userregister`;
-      const walletPayload = await requestWalletSignature();
+      let walletPayload;
+      try {
+        walletPayload = await requestWalletSignature();
+      } catch (error: any) {
+        if (error?.code === "WALLET_NOT_DETECTED") {
+          await attemptDevLogin();
+          return;
+        }
+        throw error;
+      }
       const result = await postApi(legacyUrl, {
         ...walletPayload,
         referral_address: data.referralAddress || undefined,

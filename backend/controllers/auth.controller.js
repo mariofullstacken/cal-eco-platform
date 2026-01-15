@@ -114,3 +114,50 @@ exports.logout = async (_req, res) => {
   const { response, statusCode } = successResponse(null, 'Logout successful');
   return res.status(statusCode).json(response);
 };
+
+exports.devLogin = async (req, res, next) => {
+  try {
+    if (config.nodeEnv === 'production') {
+      const { response, statusCode } = errorResponse('Not available', 404);
+      return res.status(statusCode).json(response);
+    }
+
+    const address =
+      req.body.address || '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd';
+    let users = await UserModel.getUsersDetailsAddress({ address });
+
+    if (users.length === 0) {
+      const referralCode =
+        'REF' + Math.random().toString(36).substr(2, 5).toUpperCase();
+      const saved = await UserModel.saveUserAddressDetails({
+        address,
+        referral_id: null,
+        referral_code: referralCode,
+      });
+      users = [{ id: saved.insertId, address, referral_code: referralCode, is_admin: 0 }];
+    }
+
+    const user = users[0];
+    const token = jwt.sign(
+      { id: user.id, address: user.address },
+      config.JWT_SECRET_KEY,
+      { expiresIn: config.SESSION_EXPIRES_IN }
+    );
+
+    const { response, statusCode } = successResponse(
+      {
+        id: user.id,
+        address: user.address,
+        referral_code: user.referral_code,
+        authToken: token,
+        is_admin: user.is_admin,
+      },
+      'Dev login successful'
+    );
+
+    return res.status(statusCode).json(response);
+  } catch (error) {
+    logger.error('Dev login error:', error);
+    return next(error);
+  }
+};
