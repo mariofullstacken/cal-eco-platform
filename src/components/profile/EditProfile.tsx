@@ -2,7 +2,7 @@ import React, { Fragment, useContext, useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form";
 
 import { ReactComponent as CopyIcon } from "../../assets/images/copy.svg";
-import { getApi, putApi } from "../../services/axios.service";
+import { checkUsernameExists as checkUsernameExistsApi, updateUserProfile } from "../../services/user.service";
 import useAuth from "../../hooks/useAuth";
 import { toast } from "react-toastify";
 import { ActionTypes, AuthContext } from "../../contexts/AuthContext";
@@ -199,21 +199,33 @@ const EditProfile = () => {
 
   const onSubmit = async (data: any) => {
     try {
-      await putApi("/users/", data);
+      await updateUserProfile({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        username: data.username,
+        intro: data.intro,
+      });
       await updateUserInfo();
       toast.success("Updated successfully");
     } catch (e: any) {
       console.log("Error: ", e?.response?.data || e);
-      toast.error(e?.response?.data?.message || "Something went wrong");
+      const message =
+        e?.response?.data?.message || e?.message || "Something went wrong";
+      toast.error(message);
     }
   };
 
   const checkUsernameExists = async () => {
     try {
-      // Send a request to your API to check if the username already exists
-      const response = await getApi(`/users/exists/username/${username}`);
+      if (!username) {
+        clearErrors("username");
+        return true;
+      }
 
-      if (response.data.exists) {
+      // Send a request to your API to check if the username already exists
+      const exists = await checkUsernameExistsApi(username);
+
+      if (exists) {
         setError("username", {
           type: "validate",
           message: "Username already exists!",
